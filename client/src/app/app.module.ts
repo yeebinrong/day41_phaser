@@ -29,7 +29,7 @@ const ROUTES: Routes = [
   ],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(ROUTES, {useHash:true}),
+    RouterModule.forRoot(ROUTES),
     BrowserAnimationsModule,
     MaterialModule,
     FormsModule,
