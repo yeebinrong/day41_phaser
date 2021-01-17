@@ -126,7 +126,9 @@ export class MainScene extends Scene {
 			columns: 17, rows: 13, scene: this
         })
 
-        this.screenMap.drawGrids()
+        // Draw grids on the game
+        // this.screenMap.drawGrids()
+
         for (let i of this.bg) {
             switch (i.type) {
                 case "Wall":
