@@ -20,12 +20,14 @@ export class MainScene extends Scene {
             (payload) => {
                 switch (payload.type) {
                     case MSG_PLAYER_INIT:
-                        console.info(payload.msg)
+                        console.info("PHASE1",payload.msg)
                         if (this.id == payload.msg.id) {
+                            console.info("PHASE2")
                             this.players[this.id] = payload.msg
                         } else {
                             this.players[payload.msg.id] = payload.msg
                             if (!!this.screenMap) {
+                                console.info("PHASE X")
                                 const player = new Player(this, this.players[payload.msg.id].stats.x, this.players[payload.msg.id].stats.y, this.screenMap, payload.msg)
                                 this.players[payload.msg.id].player = player
                                 this.screenMap.placeObjectAt(this.players[payload.msg.id].stats.x, this.players[payload.msg.id].stats.y, player.me)
@@ -115,6 +117,7 @@ export class MainScene extends Scene {
     }
 
     preload () {
+        console.info("PHASE PRELOAD")
         this.load.spritesheet(IMG_PLAYER, 'assets/images/myspritesheet_player.png',
             { frameWidth: 16, frameHeight: 24, endFrame: 40 })
         this.load.spritesheet(IMG_ENV, 'assets/images/myspritesheet_bomb.png',
@@ -122,6 +125,7 @@ export class MainScene extends Scene {
     }
 
     create () {
+        console.info("PHASE CREATE")
         this.screenMap = new ScreenMapper({
 			columns: 17, rows: 13, scene: this
         })
@@ -274,7 +278,6 @@ class Player extends Entity {
         this.game = game
         this.me = game.physics.add.sprite(0, 0, IMG_PLAYER)
         this.screenMap.placeObjectAt(x, y, this.me)
-        console.info("X AND Y" + x + " " + y)
         this.speed = 50;
         this.totalBombs = msg.stats.totalBombs || 1;
         this.currentBombs = 0;
@@ -378,10 +381,7 @@ class Player extends Entity {
     checkGrid() {
         const item = this.screenMap.getAt(this.gridPos.x, this.gridPos.y, this.me);
         if (item) {
-            console.info("collecting",item)
-            console.info(item.collect)
             if (item.collect) {
-                console.info("collecting2")
                 item.collect(this);
             }
         }
@@ -654,7 +654,6 @@ class Bricks extends Wall {
   
     destroy() {
         this.scene.time.removeEvent(this.decayTimer)
-        // console.info("blast is", this.blast.length)
         for (let i = 0; i < this.blast.length; i++) {
             this.screenMap.remove(this.blast[i].me)
             this.screenMap.removeFire(this.blast[i].me)
