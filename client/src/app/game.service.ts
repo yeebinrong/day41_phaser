@@ -28,7 +28,7 @@ export class GameService {
       physics: {
         default: 'arcade',
         arcade: {
-          debug:true
+          // debug:true
         }
       }
 		})
@@ -39,6 +39,7 @@ export class GameService {
     console.info("creating connection")
     this.id = uuidv4().toString().substring(0, 8);
     this.ws = new WebSocket(`wss://mybomberman.herokuapp.com/room/${code+ "+" + this.id}`)
+    // this.ws = new WebSocket(`ws://localhost:3000/room/${code+ "+" + this.id}`)
 
     this.ws.onmessage = (payload:MessageEvent) => {
       const msg = JSON.parse(payload.data) as BaseMessage

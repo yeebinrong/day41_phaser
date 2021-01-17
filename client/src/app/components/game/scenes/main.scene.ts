@@ -126,7 +126,7 @@ export class MainScene extends Scene {
 			columns: 17, rows: 13, scene: this
         })
 
-        // Draw grids on the game
+        // Draw grids on
         // this.screenMap.drawGrids()
 
         for (let i of this.bg) {
@@ -142,13 +142,12 @@ export class MainScene extends Scene {
                     this.screenMap.add(bricks.me)
             }
         }
-        
+
         for (let i in this.players) {
             const player = new Player(this, this.players[i].stats.x, this.players[i].stats.y, this.screenMap, this.players[i])
             this.players[i].player = player
             this.screenMap.placeObjectAt(this.players[i].stats.x, this.players[i].stats.y, player.me)
         }
-        console.info("PLAYERS",this.players)
 
         const upKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W)
         const downKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S)
@@ -209,14 +208,11 @@ export class MainScene extends Scene {
     update () {
         if (!!this.players[this.id]) {
             for (let i in this.players) {
+                console.info(this.players[i].player)
                 this.physics.collide(this.players[i].player.me, this.screenMap.items, null, null, this)
                 this.physics.overlap(this.players[i].player.me, this.screenMap.fires, () => this.checkplayer(this.players[i].player), null, this)
                 this.players[i].player.update()
-                // console.info(this.players[i].player.me.x)
-                // this.players[i].player.me.x = 5
-                // console.info(this.screenMap.screenToGrid(this.players[i].player.me.x, this.players[i].player.me.y))
             }
-            // this.player.update()
         }
     }
 

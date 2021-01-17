@@ -17,7 +17,6 @@ const BG_POS = {}
 app.use(express.static(`${__dirname}/dist/client`))
 
 app.ws('/room/:payload', (ws, req) => {
-    console.info("connection incoming")
     const payload = req.params.payload.split('+')
     const code = payload[0]
     const id = payload[1]
@@ -37,7 +36,6 @@ app.ws('/room/:payload', (ws, req) => {
     }
 
     ws.on('message', (msg) => {
-        console.info("MSG INCOMING",msg)
         processMessage(msg, code, id)
     })
 
@@ -48,7 +46,6 @@ app.ws('/room/:payload', (ws, req) => {
                 if (PLAYER_NO[code][i] == id) {
                     PLAYER_NO[code][i] = ''
                 }
-                console.info(i)
             }
             delete ROOMS[code][id]
             delete PLAYER_STATS[code][id]
@@ -58,7 +55,6 @@ app.ws('/room/:payload', (ws, req) => {
                     id: id
                 }
             })
-            console.info("deleting player")
             broadcastMsg(code, msg)
         }
     })
@@ -94,8 +90,6 @@ const processMessage = (payload, code, id) => {
             broadcastMsg(code, init_resp)
             break;
         case 'item-destroy':
-                // const item
-                console.info(msg)
                 const block = BG_POS[code].find(e => {
                     return (e.x == msg.x && e.y == msg.y)
                 })
@@ -137,7 +131,6 @@ const processMessage = (payload, code, id) => {
             break;
         case 'item-collect':
             const data = PLAYER_STATS[code][msg.id]
-            console.info(data)
             switch (msg.name) {
                 case 'PickupFire':
                     PLAYER_STATS[code][msg.id].bombSize += 1
@@ -254,10 +247,8 @@ const initPlayer = (code, ws) => {
                     stats: PLAYER_STATS[code][ws.id]
                 }
             })
-            console.info("INIT OTHER PLAYER",msg2)
             ROOMS[code][i].send(msg2)
         }
-        console.info("INIT PLAYER",msg)
         ws.send(msg)
     }
 }
