@@ -14,6 +14,8 @@ const PLAYER_STATS = {}
 const PLAYER_NO = {}
 const BG_POS = {}
 
+app.use(express.static(`${__dirname}/dist/client`))
+
 app.ws('/room/:payload', (ws, req) => {
     console.info("connection incoming")
     const payload = req.params.payload.split('+')
