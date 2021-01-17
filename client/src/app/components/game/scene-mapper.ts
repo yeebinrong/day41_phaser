@@ -125,7 +125,7 @@ s
       }
       return null;
     }
-    return -1;
+    return 0;
   }
   getFireAt(x, y, ignore) {
     if (x >= 0 && x < this.config.columns&& y >= 0 && y < this.config.rows) {

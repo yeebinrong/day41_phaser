@@ -11,6 +11,7 @@ export class MainScene extends Scene {
     id:string = ''
     players = {}
     bg = []
+    bg_generated = false;
 
     constructor () {
         super(SCENE_MAIN)
@@ -18,16 +19,19 @@ export class MainScene extends Scene {
         this.id = this.gameSvc.getId()
         this.game$ = this.gameSvc.event.subscribe(
             (payload) => {
+                console.info("INCOMING PAYLOAD",payload)
                 switch (payload.type) {
                     case MSG_PLAYER_INIT:
-                        console.info("PHASE1",payload.msg)
                         if (this.id == payload.msg.id) {
-                            console.info("PHASE2")
                             this.players[this.id] = payload.msg
+                            if (!!this.screenMap) {
+                                const player = new Player(this, this.players[payload.msg.id].stats.x, this.players[payload.msg.id].stats.y, this.screenMap, payload.msg)
+                                this.players[payload.msg.id].player = player
+                                this.screenMap.placeObjectAt(this.players[payload.msg.id].stats.x, this.players[payload.msg.id].stats.y, player.me)
+                            }
                         } else {
                             this.players[payload.msg.id] = payload.msg
                             if (!!this.screenMap) {
-                                console.info("PHASE X")
                                 const player = new Player(this, this.players[payload.msg.id].stats.x, this.players[payload.msg.id].stats.y, this.screenMap, payload.msg)
                                 this.players[payload.msg.id].player = player
                                 this.screenMap.placeObjectAt(this.players[payload.msg.id].stats.x, this.players[payload.msg.id].stats.y, player.me)
@@ -36,6 +40,23 @@ export class MainScene extends Scene {
                         break;
                     case MSG_BG_INIT:
                         this.bg = payload.msg
+                        if (!this.bg_generated) {
+                            if (!!this.screenMap) {
+                                for (let i of this.bg) {
+                                    switch (i.type) {
+                                        case "Wall":
+                                            const wall = new Wall(this, i.x, i.y, this.screenMap)
+                                            // this.item
+                                            this.screenMap.add(wall.me)
+                                            break;
+                                        case "Bricks":
+                                            const bricks = new Bricks(this, i.x, i.y, this.screenMap, this.gameSvc)
+                                            bricks.me.drop = i.spawn
+                                            this.screenMap.add(bricks.me)
+                                    }
+                                }
+                            }
+                        }
                         break;
                     case MSG_MOVE_PLAYER:
                         this.players[payload.msg.id].player.me.x = payload.msg.x
@@ -85,24 +106,25 @@ export class MainScene extends Scene {
                         }
                         break;
                     case MSG_REQ_DESTROY:
-                        console.info(payload.msg)
                         const item = this.screenMap.getAt(payload.msg.x, payload.msg.y, null)
-                        if (payload.msg.spawn != "null") {
-                            let pickupClass;
-                            if (payload.msg.spawn == 'PickupFire') {
-                                pickupClass = PickupFire
-                            } else if (payload.msg.spawn == 'PickupBomb') {
-                                pickupClass = PickupBomb
+                        if (!!item) {
+                            if (payload.msg.spawn != "null") {
+                                let pickupClass;
+                                if (payload.msg.spawn == 'PickupFire') {
+                                    pickupClass = PickupFire
+                                } else if (payload.msg.spawn == 'PickupBomb') {
+                                    pickupClass = PickupBomb
+                                }
+                                const pickup = new (pickupClass)(this, item.place.x, item.place.y, this.screenMap, this.gameSvc);
+                                this.screenMap.add(pickup)
                             }
-                            const pickup = new (pickupClass)(this, item.place.x, item.place.y, this.screenMap, this.gameSvc);
-                            this.screenMap.add(pickup)
+                            this.screenMap.remove(item)
+                            item.destroy()
                         }
-                        this.screenMap.remove(item)
-                        item.destroy()
                         break;
                     case MSG_UPDATE_STATS:
-                        console.info(payload)
                         const collected = this.screenMap.getAt(payload.msg.x, payload.msg.y, this.players[payload.msg.id].player.me)
+                        if (!!collected)
                         this.screenMap.remove(collected)
                         collected.destroy()
                         this.players[payload.msg.id].player.totalBombs = payload.msg.stats.totalBombs
@@ -117,7 +139,6 @@ export class MainScene extends Scene {
     }
 
     preload () {
-        console.info("PHASE PRELOAD")
         this.load.spritesheet(IMG_PLAYER, 'assets/images/myspritesheet_player.png',
             { frameWidth: 16, frameHeight: 24, endFrame: 40 })
         this.load.spritesheet(IMG_ENV, 'assets/images/myspritesheet_bomb.png',
@@ -125,25 +146,24 @@ export class MainScene extends Scene {
     }
 
     create () {
-        console.info("PHASE CREATE")
         this.screenMap = new ScreenMapper({
 			columns: 17, rows: 13, scene: this
         })
-
         // Draw grids on
         // this.screenMap.drawGrids()
-
-        for (let i of this.bg) {
-            switch (i.type) {
-                case "Wall":
-                    const wall = new Wall(this, i.x, i.y, this.screenMap)
-                    // this.item
-                    this.screenMap.add(wall.me)
-                    break;
-                case "Bricks":
-                    const bricks = new Bricks(this, i.x, i.y, this.screenMap, this.gameSvc)
-                    bricks.me.drop = i.spawn
-                    this.screenMap.add(bricks.me)
+        if (!this.bg_generated) {
+            for (let i of this.bg) {
+                switch (i.type) {
+                    case "Wall":
+                        const wall = new Wall(this, i.x, i.y, this.screenMap)
+                        // this.item
+                        this.screenMap.add(wall.me)
+                        break;
+                    case "Bricks":
+                        const bricks = new Bricks(this, i.x, i.y, this.screenMap, this.gameSvc)
+                        bricks.me.drop = i.spawn
+                        this.screenMap.add(bricks.me)
+                }
             }
         }
 
@@ -158,55 +178,51 @@ export class MainScene extends Scene {
         const leftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A)
         const rightKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         const spaceBar = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE)
-
-        if (!!this.players[this.id]) {
-            upKey.on('down', (event) => {
-                console.info("MOVE UP")
-                if(this.players[this.id].player.alive) {
-                    this.gameSvc.movePlayer('up_down', this.players[this.id].player)
-                }
-            })
-            upKey.on('up', (event) => {
-                if(this.players[this.id].player.alive) {
-                    this.gameSvc.movePlayer('up_up', this.players[this.id].player)
-                }
-            })
-            downKey.on('down', (event) => {
-                if(this.players[this.id].player.alive) {
-                    this.gameSvc.movePlayer('down_down', this.players[this.id].player)
-                }
-            })
-            downKey.on('up', (event) => {
-                if(this.players[this.id].player.alive) {
-                    this.gameSvc.movePlayer('down_up', this.players[this.id].player)
-                }
-            })
-            leftKey.on('down', (event) => {
-                if(this.players[this.id].player.alive) {
-                    this.gameSvc.movePlayer('left_down', this.players[this.id].player)
-                }
-            })
-            leftKey.on('up', (event) => {
-                if(this.players[this.id].player.alive) {
-                    this.gameSvc.movePlayer('left_up', this.players[this.id].player)
-                }
-            })
-            rightKey.on('down', (event) => {
-                if(this.players[this.id].player.alive) {
-                    this.gameSvc.movePlayer('right_down', this.players[this.id].player)
-                }
-            })
-            rightKey.on('up', (event) => {
-                if(this.players[this.id].player.alive) {
-                    this.gameSvc.movePlayer('right_up', this.players[this.id].player)
-                }
-            })
-            spaceBar.on('down', (event) => {
-                if(this.players[this.id].player.alive) {
-                    this.gameSvc.movePlayer('space', this.players[this.id].player)
-                }
-            })
-        }
+        upKey.on('down', (event) => {
+            if(this.players[this.id].player.alive) {
+                this.gameSvc.movePlayer('up_down', this.players[this.id].player)
+            }
+        })
+        upKey.on('up', (event) => {
+            if(this.players[this.id].player.alive) {
+                this.gameSvc.movePlayer('up_up', this.players[this.id].player)
+            }
+        })
+        downKey.on('down', (event) => {
+            if(this.players[this.id].player.alive) {
+                this.gameSvc.movePlayer('down_down', this.players[this.id].player)
+            }
+        })
+        downKey.on('up', (event) => {
+            if(this.players[this.id].player.alive) {
+                this.gameSvc.movePlayer('down_up', this.players[this.id].player)
+            }
+        })
+        leftKey.on('down', (event) => {
+            if(this.players[this.id].player.alive) {
+                this.gameSvc.movePlayer('left_down', this.players[this.id].player)
+            }
+        })
+        leftKey.on('up', (event) => {
+            if(this.players[this.id].player.alive) {
+                this.gameSvc.movePlayer('left_up', this.players[this.id].player)
+            }
+        })
+        rightKey.on('down', (event) => {
+            if(this.players[this.id].player.alive) {
+                this.gameSvc.movePlayer('right_down', this.players[this.id].player)
+            }
+        })
+        rightKey.on('up', (event) => {
+            if(this.players[this.id].player.alive) {
+                this.gameSvc.movePlayer('right_up', this.players[this.id].player)
+            }
+        })
+        spaceBar.on('down', (event) => {
+            if(this.players[this.id].player.alive) {
+                this.gameSvc.movePlayer('space', this.players[this.id].player)
+            }
+        })
     }
 
     update () {
@@ -290,6 +306,7 @@ class Player extends Entity {
         this.me.gridPos = this.gridPos
         this.me.blastThrough = true;
         this.id = msg.id 
+        this.me.setDepth(1)
         this.me.kill = () => this.kill()
 
         this.me.anims.create({key:'up',frames: this.anims.generateFrameNumbers(IMG_PLAYER, {start: 30, end:34}), frameRate: 5, repeat: -1});
