@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { Injector, NgModule } from '@angular/core';
 
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -11,9 +11,12 @@ import { MaterialModule } from './material.module';
 import { FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { FlexLayoutModule } from '@angular/flex-layout';
 import { HttpClientModule } from '@angular/common/http';
+import { GameService } from './game.service';
+import { Globals } from './models';
 
 const ROUTES: Routes = [
   {path:'', component:MainComponent},
+  {path:'game/', component:GameComponent},
   {path:'game/:code', component:GameComponent},
   {path:'**', redirectTo:'/', pathMatch:'full'}
 ]
@@ -26,7 +29,7 @@ const ROUTES: Routes = [
   ],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(ROUTES, {useHash: true}),
+    RouterModule.forRoot(ROUTES, {useHash:true}),
     BrowserAnimationsModule,
     MaterialModule,
     FormsModule,
@@ -34,7 +37,11 @@ const ROUTES: Routes = [
     FlexLayoutModule,
     HttpClientModule
   ],
-  providers: [],
+  providers: [GameService],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {
+  constructor(injector: Injector) {
+		Globals.injector = injector
+	}
+}

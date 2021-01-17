@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { v4 as uuidv4 } from 'uuid';
 
 @Component({
   selector: 'app-main',
@@ -6,10 +8,15 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./main.component.css']
 })
 export class MainComponent implements OnInit {
-
-  constructor() { }
+  code:string
+  constructor(private router:Router) { }
 
   ngOnInit(): void {
+    this.code = uuidv4().toString().substring(0, 5);
+  }
+
+  onSubmit () {
+    this.router.navigate(['/game',this.code])
   }
 
 }
