@@ -208,10 +208,11 @@ export class MainScene extends Scene {
     update () {
         if (!!this.players[this.id]) {
             for (let i in this.players) {
-                console.info(this.players[i].player)
-                this.physics.collide(this.players[i].player.me, this.screenMap.items, null, null, this)
-                this.physics.overlap(this.players[i].player.me, this.screenMap.fires, () => this.checkplayer(this.players[i].player), null, this)
-                this.players[i].player.update()
+                if (this.players[i].player) {
+                    this.physics.collide(this.players[i].player.me, this.screenMap.items, null, null, this)
+                    this.physics.overlap(this.players[i].player.me, this.screenMap.fires, () => this.checkplayer(this.players[i].player), null, this)
+                    this.players[i].player.update()
+                }
             }
         }
     }
