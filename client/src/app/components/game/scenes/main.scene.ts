@@ -468,7 +468,7 @@ class Bricks extends Wall {
             this.screenMap.remove(this.me)
             if (this.me.body) {
                 const point = this.screenMap.screenToGrid(this.me.body.position.x, this.me.body.position.y)
-                const explosion = new Explosion(this.game, point.x, point.y, this.screenMap, this.owner, this.size, this);
+                const explosion = new Explosion(this.game, point.x, point.y, this.screenMap, this.owner, this.size);
                 this.me.destroy()
             }
     }
